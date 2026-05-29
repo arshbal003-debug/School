@@ -1,36 +1,43 @@
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New School Management</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <aside class="sidebar">
-      <div class="brand"><div class="logo">NS</div><div><strong>NewSchool</strong><span>Management Software</span></div></div>
-      <button class="nav active" data-page="dashboard">Dashboard</button>
-      <button class="nav" data-page="students">Students</button>
-      <button class="nav" data-page="attendance">Attendance</button>
-      <button class="nav" data-page="fees">Fees</button>
-      <button class="nav" data-page="notices">Notices</button>
-    </aside>
-    <main class="content">
-      <header class="topbar">
-        <div><p>School administration</p><h1>Professional School Management Software</h1></div>
-        <div class="actions"><input id="searchInput" type="search" placeholder="Search students..." /><button id="addStudentBtn">Add Student</button></div>
-      </header>
-      <section id="dashboard" class="page active">
-        <div class="stats"><article><span>Total Students</span><strong id="totalStudents">0</strong></article><article><span>Attendance Today</span><strong>94%</strong></article><article><span>Fees Collected</span><strong>$42,860</strong></article><article><span>Open Notices</span><strong>7</strong></article></div>
-        <div class="grid"><section class="panel large"><h2>Student Directory</h2><table><thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Parent</th><th>Fee Status</th></tr></thead><tbody id="studentRows"></tbody></table></section><section class="panel"><h2>Quick Actions</h2><div class="quick-actions"><button>Mark Attendance</button><button>Generate Fee Receipt</button><button>Send Parent Notice</button><button>Create Exam Timetable</button></div></section></div>
-      </section>
-      <section id="students" class="page"><section class="panel"><h2>Students</h2><div class="cards" id="studentCards"></div></section></section>
-      <section id="attendance" class="page"><section class="panel"><h2>Attendance Overview</h2><div class="cards"><article><strong>Nursery</strong><span>97%</span></article><article><strong>Class 1</strong><span>92%</span></article><article><strong>Class 5</strong><span>95%</span></article><article><strong>Class 8</strong><span>89%</span></article></div></section></section>
-      <section id="fees" class="page"><section class="panel"><h2>Fee Management</h2><div class="cards"><article><strong>Paid</strong><span>$42,860</span></article><article><strong>Pending</strong><span>$11,420</span></article><article><strong>Scholarship</strong><span>$4,200</span></article></div></section></section>
-      <section id="notices" class="page"><section class="panel"><h2>Notice Board</h2><div class="notices"><article><strong>Parent teacher meeting</strong><span>Saturday, 10:00 AM</span></article><article><strong>Exam schedule published</strong><span>Midterm timetable is available.</span></article><article><strong>Transport update</strong><span>Route B starts 15 minutes earlier.</span></article></div></section></section>
-    </main>
-    <dialog id="studentDialog"><form id="studentForm"><h2>Add Student</h2><input name="name" required placeholder="Student name" /><input name="grade" required placeholder="Class" /><input name="roll" required placeholder="Roll number" /><input name="parent" required placeholder="Parent name" /><select name="status"><option>Paid</option><option>Pending</option><option>Scholarship</option></select><div class="dialog-actions"><button type="button" id="closeDialog">Cancel</button><button type="submit">Save Student</button></div></form></dialog>
-    <script src="app.js"></script>
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NS NewSchool Management</title>
+    <style>
+        :root{--nav:#0f2a35;--nav-light:#173947;--accent:#168a75;--ink:#18212f;--muted:#657286;--line:#d9e0ea;--page:#eef3f7;--card:#fff}
+        body{display:grid;grid-template-columns:270px 1fr;min-height:100vh;margin:0;background:var(--page);font-family:Arial,sans-serif}
+        .sidebar{background:var(--nav);color:white;padding:24px}
+        .content{padding:28px}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+        .panel{background:var(--card);padding:20px;border-radius:8px;border:1px solid var(--line)}
+        table{width:100%;border-collapse:collapse;margin-top:15px}
+        th,td{border-bottom:1px solid var(--line);padding:14px;text-align:left}
+        .btn{background:var(--accent);color:white;padding:10px 15px;border-radius:5px;text-decoration:none;display:inline-block;margin-top:10px}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>NS NewSchool</h2>
+        <p>Dashboard</p><p>Students</p><p>Attendance</p><p>Fees</p><p>Notices</p>
+    </div>
+    <div class="content">
+        <h1>Professional School Management Software</h1>
+        <div class="stats">
+            <div class="panel">Total Students<br><strong>5</strong></div>
+            <div class="panel">Attendance<br><strong>94%</strong></div>
+            <div class="panel">Fees<br><strong>$42,860</strong></div>
+            <div class="panel">Notices<br><strong>7</strong></div>
+        </div>
+        <div class="panel">
+            <h3>Student Directory</h3>
+            <table>
+                <tr><th>NAME</th><th>CLASS</th><th>ROLL</th><th>PARENT</th><th>FEE STATUS</th></tr>
+                <tr><td>Arshdeep Singh</td><td>Basic</td><td>124</td><td>Balvir Singh</td><td>Paid</td></tr>
+                <tr><td>Aarav Sharma</td><td>Class 4</td><td>04</td><td>Meena Sharma</td><td>Paid</td></tr>
+                <tr><td>Sara Khan</td><td>Class 7</td><td>18</td><td>Imran Khan</td><td>Pending</td></tr>
+                <tr><td>Kabir Singh</td><td>Class 2</td><td>11</td><td>Nisha Singh</td><td>Scholarship</td></tr>
+                <tr><td>Anaya Patel</td><td>Class 9</td><td>27</td><td>Ravi Patel</td><td>Paid</td></tr>
+            </table>
+        </div>
+    </div>
+</body>
 </html>
