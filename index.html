@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NS NewSchool Management</title>
+    <title>Arshbal Learning & Coaching Center</title>
     <style>
         :root{--nav:#0f2a35;--nav-light:#173947;--accent:#168a75;--ink:#18212f;--muted:#657286;--line:#d9e0ea;--page:#eef3f7;--card:#fff}
         body{display:grid;grid-template-columns:270px 1fr;min-height:100vh;margin:0;background:var(--page);font-family:Arial,sans-serif}
@@ -11,33 +11,41 @@
         .panel{background:var(--card);padding:20px;border-radius:8px;border:1px solid var(--line)}
         table{width:100%;border-collapse:collapse;margin-top:15px}
         th,td{border-bottom:1px solid var(--line);padding:14px;text-align:left}
-        .btn{background:var(--accent);color:white;padding:10px 15px;border-radius:5px;text-decoration:none;display:inline-block;margin-top:10px}
+        .btn{background:var(--accent);color:white;padding:10px 15px;border-radius:5px;border:none;cursor:pointer;margin-top:10px}
+        .director-info{margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; color: #ddd;}
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <h2>NS NewSchool</h2>
-        <p>Dashboard</p><p>Students</p><p>Attendance</p><p>Fees</p><p>Notices</p>
+        <h2 style="font-size: 1.2rem;">Arshbal Learning & Coaching Center</h2>
+        <p>Dashboard</p><p>Students</p><p>Attendance</p><p>Fees</p>
+        <div class="director-info">
+            <p><strong>Director:</strong><br>Arshdeep Singh</p>
+            <p><strong>Contact:</strong><br>9855853554</p>
+        </div>
     </div>
     <div class="content">
-        <h1>Professional School Management Software</h1>
+        <h1>Welcome to Arshbal Coaching Center</h1>
         <div class="stats">
-            <div class="panel">Total Students<br><strong>5</strong></div>
+            <div class="panel">Total Students<br><strong>41</strong></div>
             <div class="panel">Attendance<br><strong>94%</strong></div>
             <div class="panel">Fees<br><strong>$42,860</strong></div>
-            <div class="panel">Notices<br><strong>7</strong></div>
+            <div class="panel">Teachers<br><strong>7</strong></div>
         </div>
         <div class="panel">
             <h3>Student Directory</h3>
+            <button class="btn" id="addStudentBtn">Add Student</button>
             <table>
                 <tr><th>NAME</th><th>CLASS</th><th>ROLL</th><th>PARENT</th><th>FEE STATUS</th></tr>
                 <tr><td>Arshdeep Singh</td><td>Basic</td><td>124</td><td>Balvir Singh</td><td>Paid</td></tr>
-                <tr><td>Aarav Sharma</td><td>Class 4</td><td>04</td><td>Meena Sharma</td><td>Paid</td></tr>
-                <tr><td>Sara Khan</td><td>Class 7</td><td>18</td><td>Imran Khan</td><td>Pending</td></tr>
-                <tr><td>Kabir Singh</td><td>Class 2</td><td>11</td><td>Nisha Singh</td><td>Scholarship</td></tr>
-                <tr><td>Anaya Patel</td><td>Class 9</td><td>27</td><td>Ravi Patel</td><td>Paid</td></tr>
             </table>
         </div>
     </div>
+
+    <script>
+        document.getElementById('addStudentBtn').onclick = function() {
+            alert("Hello Arshdeep! Add Student form will open here.");
+        };
+    </script>
 </body>
 </html>
