@@ -1,51 +1,292 @@
-<!DOCTYPE html>
-<html>
+
+<!doctype html>
+<html lang="en">
 <head>
-    <title>Arshbal Learning & Coaching Center</title>
-    <style>
-        :root{--nav:#0f2a35;--nav-light:#173947;--accent:#168a75;--ink:#18212f;--muted:#657286;--line:#d9e0ea;--page:#eef3f7;--card:#fff}
-        body{display:grid;grid-template-columns:270px 1fr;min-height:100vh;margin:0;background:var(--page);font-family:Arial,sans-serif}
-        .sidebar{background:var(--nav);color:white;padding:24px}
-        .content{padding:28px}
-        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
-        .panel{background:var(--card);padding:20px;border-radius:8px;border:1px solid var(--line)}
-        table{width:100%;border-collapse:collapse;margin-top:15px}
-        th,td{border-bottom:1px solid var(--line);padding:14px;text-align:left}
-        .btn{background:var(--accent);color:white;padding:10px 15px;border-radius:5px;border:none;cursor:pointer;margin-top:10px}
-        .director-info{margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.9rem; color: #ddd;}
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arshbal Attendance Pro</title>
+  <link rel="stylesheet" href="arshbal-attendance.css">
 </head>
 <body>
-    <div class="sidebar">
-        <h2 style="font-size: 1.2rem;">Arshbal Learning & Coaching Center</h2>
-        <p>Dashboard</p><p>Students</p><p>Attendance</p><p>Fees</p>
-        <div class="director-info">
-            <p><strong>Director:</strong><br>Arshdeep Singh</p>
-            <p><strong>Contact:</strong><br>9855853554</p>
-        </div>
-    </div>
-    <div class="content">
-        <h1>Welcome to Arshbal Coaching Center</h1>
-        <div class="stats">
-            <div class="panel">Total Students<br><strong>41</strong></div>
-            <div class="panel">Attendance<br><strong>94%</strong></div>
-            <div class="panel">Fees<br><strong>$42,860</strong></div>
-            <div class="panel">Teachers<br><strong>7</strong></div>
-        </div>
-        <div class="panel">
-            <h3>Student Directory</h3>
-            <button class="btn" id="addStudentBtn">Add Student</button>
-            <table>
-                <tr><th>NAME</th><th>CLASS</th><th>ROLL</th><th>PARENT</th><th>FEE STATUS</th></tr>
-                <tr><td>Arshdeep Singh</td><td>Basic</td><td>124</td><td>Balvir Singh</td><td>Paid</td></tr>
-            </table>
-        </div>
-    </div>
+  <div id="loginView" class="login-view">
+    <section class="login-card">
+      <img src="orignallogo.png" alt="Arshbal logo" class="login-logo">
+      <p class="eyebrow">Attendance Pro</p>
+      <h1>Arshbal Learning and Coaching Center</h1>
+      <p class="muted">Admin dashboard for students, batches, attendance, reports, and backups.</p>
+      <form id="loginForm" class="login-form">
+        <label>
+          Admin PIN
+          <input id="adminPin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Default: 003" required>
+        </label>
+        <button class="primary-btn" type="submit">Unlock Dashboard</button>
+        <p id="loginError" class="form-error" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
 
-    <script>
-        document.getElementById('addStudentBtn').onclick = function() {
-            alert("Hello Arshdeep! Add Student form will open here.");
-        };
-    </script>
+  <div id="appView" class="app-shell hidden">
+    <header class="topbar">
+      <section class="brand">
+        <div class="brand-mark">
+          <img src="orignallogo.png" alt="Arshbal Learning and Coaching Center logo">
+        </div>
+        <div>
+          <p class="eyebrow">Attendance Pro</p>
+          <h1 id="centerTitle">Arshbal Learning and Coaching Center</h1>
+        </div>
+      </section>
+      <section class="top-actions">
+        <button id="sendBackupBtn" class="backup-btn" type="button">Send Backup</button>
+        <button id="lockBtn" class="secondary-btn" type="button">Lock</button>
+      </section>
+    </header>
+
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab-btn active" data-view="dashboardView" type="button">Dashboard</button>
+      <button class="tab-btn" data-view="studentsView" type="button">Students</button>
+      <button class="tab-btn" data-view="reportsView" type="button">Reports</button>
+      <button class="tab-btn" data-view="settingsView" type="button">Settings</button>
+    </nav>
+
+    <main>
+      <section id="dashboardView" class="view active">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>Total Students</span>
+            <strong id="totalStudents">0</strong>
+          </article>
+          <article class="stat-card present">
+            <span>Present Today</span>
+            <strong id="presentToday">0</strong>
+          </article>
+          <article class="stat-card absent">
+            <span>Absent Today</span>
+            <strong id="absentToday">0</strong>
+          </article>
+          <article class="stat-card leave">
+            <span>On Leave Today</span>
+            <strong id="leaveToday">0</strong>
+          </article>
+        </div>
+
+        <section class="panel controls">
+          <div class="control-grid">
+            <label>
+              Attendance Date
+              <input id="attendanceDate" type="date">
+            </label>
+            <label>
+              Batch Filter
+              <select id="batchFilter">
+                <option value="All">All Batches</option>
+                <option value="Morning">Morning</option>
+                <option value="Evening">Evening</option>
+		<option value="Afternoon">Afternoon</option>
+              </select>
+            </label>
+            <label>
+              Search
+              <input id="searchInput" type="search" placeholder="Search student or course">
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="markAllPresentBtn" class="secondary-btn" type="button">Mark All Present</button>
+            <button id="clearDayBtn" class="secondary-btn danger-soft" type="button">Clear Day</button>
+          </div>
+        </section>
+
+        <section class="panel attendance-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Daily Attendance</p>
+              <h2>Present, Absent, Leave</h2>
+            </div>
+            <div class="summary-strip">
+              <span><b id="presentTotal">0</b> Present</span>
+              <span><b id="absentTotal">0</b> Absent</span>
+              <span><b id="leaveTotal">0</b> Leave</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Batch</th>
+                  <th>Status</th>
+                  <th>Month Fine</th>
+                  <th>Month %</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="studentTable"></tbody>
+            </table>
+          </div>
+          <p id="emptyState" class="empty-state">No students yet. Add your first student in the Students section.</p>
+        </section>
+      </section>
+
+      <section id="studentsView" class="view">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Student Management</p>
+              <h2>Add or Update Student</h2>
+            </div>
+            <button id="resetStudentFormBtn" class="secondary-btn" type="button">New Student</button>
+          </div>
+          <form id="studentForm" class="student-form pro-form">
+            <input id="studentId" type="hidden">
+            <label>
+              Student Name
+              <input id="studentName" type="text" placeholder="Enter full name" required>
+            </label>
+            <label>
+              Course
+              <input id="courseName" type="text" placeholder="Coding, Web Design, Python..." required>
+            </label>
+            <label>
+              Time Batch
+              <select id="batchName" required>
+                <option value="Morning">Morning Batch</option>
+                <option value="Evening">Evening Batch</option>
+              </select>
+            </label>
+            <label>
+              Phone
+              <input id="phoneNumber" type="tel" placeholder="Optional">
+            </label>
+            <label>
+              Student Photo / File
+              <input id="studentPhoto" type="file">
+            </label>
+            <div class="photo-preview" id="photoPreview">No photo</div>
+            <button id="studentSubmitBtn" class="primary-btn" type="submit">Add Student</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Directory</p>
+              <h2>All Students</h2>
+            </div>
+            <button id="exportStudentsBtn" class="secondary-btn" type="button">Export Students CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Photo</th>
+                  <th>Course</th>
+                  <th>Batch</th>
+                  <th>Phone</th>
+                  <th>Month Fine</th>
+                  <th>Month %</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="directoryTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="reportsView" class="view">
+        <section class="panel report-panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Monthly Data</p>
+              <h2>Printable Attendance Report</h2>
+            </div>
+            <div class="button-row">
+              <button id="exportReportBtn" class="secondary-btn" type="button">Export CSV</button>
+              <button id="printReportBtn" class="primary-btn" type="button">Print Report</button>
+            </div>
+          </div>
+          <div class="control-grid report-controls">
+            <label>
+              Month
+              <input id="reportMonth" type="month">
+            </label>
+            <label>
+              Batch
+              <select id="reportBatch">
+                <option value="All">All Batches</option>
+                <option value="Morning">Morning</option>
+                <option value="Evening">Evening</option>
+              </select>
+            </label>
+            <label>
+              Working Days
+              <input id="workingDaysOverride" type="number" min="1" max="31" placeholder="Auto Mon-Fri">
+            </label>
+          </div>
+          <div id="reportArea" class="report-area"></div>
+        </section>
+      </section>
+
+      <section id="settingsView" class="view">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Business Settings</p>
+              <h2>Center Details & Backup</h2>
+            </div>
+            <button id="downloadBackupBtn" class="secondary-btn" type="button">Download JSON Backup</button>
+          </div>
+          <form id="settingsForm" class="pro-form">
+            <label>
+              Center Name
+              <input id="settingCenterName" type="text" required>
+            </label>
+            <label>
+              Footer Email
+              <input id="settingFooterEmail" type="email" required>
+            </label>
+            <label>
+              Backup Email
+              <input id="settingBackupEmail" type="email" required>
+            </label>
+            <label>
+              Admin PIN
+              <input id="settingPin" type="password" inputmode="numeric" required>
+            </label>
+            <button class="primary-btn" type="submit">Save Settings</button>
+          </form>
+          <div class="note-box">
+            <strong>Hosting note:</strong>
+            <span>This browser version stores data on the device. For paid multi-device clients, connect Firebase/Supabase backend or a server database.</span>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-brand">
+        <img src="orignallogo.png" alt="Arshbal Learning and Coaching Center logo">
+        <span id="footerCenterName">Arshbal Learning and Coaching Center</span>
+      </div>
+      <a id="footerEmail" href="mailto:info@balcoachingcenter.com">info@balcoachingcenter.com</a>
+    </footer>
+  </div>
+
+  <div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <section class="modal-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Student Profile</p>
+          <h2 id="profileTitle">Student</h2>
+        </div>
+        <button id="closeProfileBtn" class="secondary-btn" type="button">Close</button>
+      </div>
+      <div id="profileBody" class="profile-body"></div>
+    </section>
+  </div>
+
+  <script src="arshbal-attendance.js"></script>
 </body>
 </html>
