@@ -1,292 +1,718 @@
+// ===== FINE HISTORY FUNCTIONS =====
+function getCurrentMonthKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Arshbal Attendance Pro</title>
-  <link rel="stylesheet" href="arshbal-attendance.css">
-</head>
-<body>
-  <div id="loginView" class="login-view">
-    <section class="login-card">
-      <img src="orignallogo.png" alt="Arshbal logo" class="login-logo">
-      <p class="eyebrow">Attendance Pro</p>
-      <h1>Arshbal Learning and Coaching Center</h1>
-      <p class="muted">Admin dashboard for students, batches, attendance, reports, and backups.</p>
-      <form id="loginForm" class="login-form">
-        <label>
-          Admin PIN
-          <input id="adminPin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Default: 003" required>
-        </label>
-        <button class="primary-btn" type="submit">Unlock Dashboard</button>
-        <p id="loginError" class="form-error" aria-live="polite"></p>
-      </form>
-    </section>
-  </div>
+function getPreviousMonth() {
+  const now = new Date();
+  now.setMonth(now.getMonth() - 1);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
 
-  <div id="appView" class="app-shell hidden">
-    <header class="topbar">
-      <section class="brand">
-        <div class="brand-mark">
-          <img src="orignallogo.png" alt="Arshbal Learning and Coaching Center logo">
-        </div>
-        <div>
-          <p class="eyebrow">Attendance Pro</p>
-          <h1 id="centerTitle">Arshbal Learning and Coaching Center</h1>
-        </div>
-      </section>
-      <section class="top-actions">
-        <button id="sendBackupBtn" class="backup-btn" type="button">Send Backup</button>
-        <button id="lockBtn" class="secondary-btn" type="button">Lock</button>
-      </section>
-    </header>
+function checkAndResetMonthlyFine() {
+  const currentMonth = getCurrentMonthKey();
+  const lastProcessedMonth = localStorage.getItem('lastProcessedMonth');
+  
+  if (lastProcessedMonth !== currentMonth) {
+    const students = JSON.parse(localStorage.getItem('students')) || [];
+    
+    students.forEach(student => {
+      if (!student.fineHistory) {
+        student.fineHistory = {};
+      }
+      
+      const prevMonth = getPreviousMonth();
+      if (student.monthlyFine > 0) {
+        student.fineHistory[prevMonth] = student.monthlyFine;
+      }
+      
+      student.monthlyFine = 0;
+    });
+    
+    localStorage.setItem('students', JSON.stringify(students));
+    localStorage.setItem('lastProcessedMonth', currentMonth);
+  }
+}
 
-    <nav class="tabs" aria-label="Dashboard sections">
-      <button class="tab-btn active" data-view="dashboardView" type="button">Dashboard</button>
-      <button class="tab-btn" data-view="studentsView" type="button">Students</button>
-      <button class="tab-btn" data-view="reportsView" type="button">Reports</button>
-      <button class="tab-btn" data-view="settingsView" type="button">Settings</button>
-    </nav>
+function initializeFineHistory() {
+  const students = JSON.parse(localStorage.getItem('students')) || [];
+  let updated = false;
+  
+  students.forEach(student => {
+    if (!student.fineHistory) {
+      student.fineHistory = {};
+      updated = true;
+    }
+    if (!student.monthlyFine) {
+      student.monthlyFine = 0;
+      updated = true;
+    }
+  });
+  
+  if (updated) {
+    localStorage.setItem('students', JSON.stringify(students));
+  }
+}
 
-    <main>
-      <section id="dashboardView" class="view active">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span>Total Students</span>
-            <strong id="totalStudents">0</strong>
-          </article>
-          <article class="stat-card present">
-            <span>Present Today</span>
-            <strong id="presentToday">0</strong>
-          </article>
-          <article class="stat-card absent">
-            <span>Absent Today</span>
-            <strong id="absentToday">0</strong>
-          </article>
-          <article class="stat-card leave">
-            <span>On Leave Today</span>
-            <strong id="leaveToday">0</strong>
-          </article>
-        </div>
+function updateProfileBodyWithHistory(student) {
+  const fineHistoryHTML = Object.entries(student.fineHistory || {})
+    .sort()
+    .reverse()
+    .map(([month, fine]) => `<p><strong>${month}:</strong> ₹${fine}</p>`)
+    .join('');
 
-        <section class="panel controls">
-          <div class="control-grid">
-            <label>
-              Attendance Date
-              <input id="attendanceDate" type="date">
-            </label>
-            <label>
-              Batch Filter
-              <select id="batchFilter">
-                <option value="All">All Batches</option>
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
-		<option value="Afternoon">Afternoon</option>
-              </select>
-            </label>
-            <label>
-              Search
-              <input id="searchInput" type="search" placeholder="Search student or course">
-            </label>
-          </div>
-          <div class="button-row">
-            <button id="markAllPresentBtn" class="secondary-btn" type="button">Mark All Present</button>
-            <button id="clearDayBtn" class="secondary-btn danger-soft" type="button">Clear Day</button>
-          </div>
-        </section>
-
-        <section class="panel attendance-panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Daily Attendance</p>
-              <h2>Present, Absent, Leave</h2>
-            </div>
-            <div class="summary-strip">
-              <span><b id="presentTotal">0</b> Present</span>
-              <span><b id="absentTotal">0</b> Absent</span>
-              <span><b id="leaveTotal">0</b> Leave</span>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Course</th>
-                  <th>Batch</th>
-                  <th>Status</th>
-                  <th>Month Fine</th>
-                  <th>Month %</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="studentTable"></tbody>
-            </table>
-          </div>
-          <p id="emptyState" class="empty-state">No students yet. Add your first student in the Students section.</p>
-        </section>
-      </section>
-
-      <section id="studentsView" class="view">
-        <section class="panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Student Management</p>
-              <h2>Add or Update Student</h2>
-            </div>
-            <button id="resetStudentFormBtn" class="secondary-btn" type="button">New Student</button>
-          </div>
-          <form id="studentForm" class="student-form pro-form">
-            <input id="studentId" type="hidden">
-            <label>
-              Student Name
-              <input id="studentName" type="text" placeholder="Enter full name" required>
-            </label>
-            <label>
-              Course
-              <input id="courseName" type="text" placeholder="Coding, Web Design, Python..." required>
-            </label>
-            <label>
-              Time Batch
-              <select id="batchName" required>
-                <option value="Morning">Morning Batch</option>
-                <option value="Evening">Evening Batch</option>
-              </select>
-            </label>
-            <label>
-              Phone
-              <input id="phoneNumber" type="tel" placeholder="Optional">
-            </label>
-            <label>
-              Student Photo / File
-              <input id="studentPhoto" type="file">
-            </label>
-            <div class="photo-preview" id="photoPreview">No photo</div>
-            <button id="studentSubmitBtn" class="primary-btn" type="submit">Add Student</button>
-          </form>
-        </section>
-
-        <section class="panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Directory</p>
-              <h2>All Students</h2>
-            </div>
-            <button id="exportStudentsBtn" class="secondary-btn" type="button">Export Students CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Photo</th>
-                  <th>Course</th>
-                  <th>Batch</th>
-                  <th>Phone</th>
-                  <th>Month Fine</th>
-                  <th>Month %</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="directoryTable"></tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <section id="reportsView" class="view">
-        <section class="panel report-panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Monthly Data</p>
-              <h2>Printable Attendance Report</h2>
-            </div>
-            <div class="button-row">
-              <button id="exportReportBtn" class="secondary-btn" type="button">Export CSV</button>
-              <button id="printReportBtn" class="primary-btn" type="button">Print Report</button>
-            </div>
-          </div>
-          <div class="control-grid report-controls">
-            <label>
-              Month
-              <input id="reportMonth" type="month">
-            </label>
-            <label>
-              Batch
-              <select id="reportBatch">
-                <option value="All">All Batches</option>
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
-              </select>
-            </label>
-            <label>
-              Working Days
-              <input id="workingDaysOverride" type="number" min="1" max="31" placeholder="Auto Mon-Fri">
-            </label>
-          </div>
-          <div id="reportArea" class="report-area"></div>
-        </section>
-      </section>
-
-      <section id="settingsView" class="view">
-        <section class="panel">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Business Settings</p>
-              <h2>Center Details & Backup</h2>
-            </div>
-            <button id="downloadBackupBtn" class="secondary-btn" type="button">Download JSON Backup</button>
-          </div>
-          <form id="settingsForm" class="pro-form">
-            <label>
-              Center Name
-              <input id="settingCenterName" type="text" required>
-            </label>
-            <label>
-              Footer Email
-              <input id="settingFooterEmail" type="email" required>
-            </label>
-            <label>
-              Backup Email
-              <input id="settingBackupEmail" type="email" required>
-            </label>
-            <label>
-              Admin PIN
-              <input id="settingPin" type="password" inputmode="numeric" required>
-            </label>
-            <button class="primary-btn" type="submit">Save Settings</button>
-          </form>
-          <div class="note-box">
-            <strong>Hosting note:</strong>
-            <span>This browser version stores data on the device. For paid multi-device clients, connect Firebase/Supabase backend or a server database.</span>
-          </div>
-        </section>
-      </section>
-    </main>
-
-    <footer>
-      <div class="footer-brand">
-        <img src="orignallogo.png" alt="Arshbal Learning and Coaching Center logo">
-        <span id="footerCenterName">Arshbal Learning and Coaching Center</span>
+  return `
+    <div class="profile-details">
+      <p><strong>Name:</strong> ${student.name}</p>
+      <p><strong>Course:</strong> ${student.course}</p>
+      <p><strong>Batch:</strong> ${student.batch}</p>
+      <p><strong>Phone:</strong> ${student.phone || 'N/A'}</p>
+      
+      <div class="fine-section">
+        <h3>Current Month Fine: ₹${student.monthlyFine}</h3>
+        <h4>Previous Months Fines:</h4>
+        ${fineHistoryHTML || '<p>No previous fines</p>'}
       </div>
-      <a id="footerEmail" href="mailto:info@balcoachingcenter.com">info@balcoachingcenter.com</a>
-    </footer>
-  </div>
+      
+      ${student.photo ? `<img src="${student.photo}" alt="${student.name}" class="profile-photo" style="max-width: 200px; margin-top: 10px; border-radius: 8px;">` : ''}
+    </div>
+  `;
+}
 
-  <div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
-    <section class="modal-card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Student Profile</p>
-          <h2 id="profileTitle">Student</h2>
-        </div>
-        <button id="closeProfileBtn" class="secondary-btn" type="button">Close</button>
-      </div>
-      <div id="profileBody" class="profile-body"></div>
-    </section>
-  </div>
+// ===== CORE APP FUNCTIONS =====
+function initializeApp() {
+  initializeFineHistory();
+  checkAndResetMonthlyFine();
+  
+  const pin = localStorage.getItem('adminPin') || '003';
+  const centerName = localStorage.getItem('centerName') || 'Arshbal Learning and Coaching Center';
+  const footerEmail = localStorage.getItem('footerEmail') || 'info@balcoachingcenter.com';
+  const backupEmail = localStorage.getItem('backupEmail') || '';
+  
+  document.getElementById('settingCenterName').value = centerName;
+  document.getElementById('settingFooterEmail').value = footerEmail;
+  document.getElementById('settingBackupEmail').value = backupEmail;
+  document.getElementById('settingPin').value = pin;
+  document.getElementById('centerTitle').textContent = centerName;
+  document.getElementById('footerCenterName').textContent = centerName;
+  document.getElementById('footerEmail').href = `mailto:${footerEmail}`;
+  
+  setTodayDate();
+  renderDashboard();
+  renderStudentTable();
+  renderDirectoryTable();
+  attachEventListeners();
+}
 
-  <script src="arshbal-attendance.js"></script>
-</body>
-</html>
+function setTodayDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('attendanceDate').value = today;
+}
+
+function getStudents() {
+  return JSON.parse(localStorage.getItem('students')) || [];
+}
+
+function saveStudents(students) {
+  localStorage.setItem('students', JSON.stringify(students));
+}
+
+function renderDashboard() {
+  const students = getStudents();
+  const attendanceDate = document.getElementById('attendanceDate').value;
+  const batchFilter = document.getElementById('batchFilter').value;
+  
+  let filteredStudents = students;
+  if (batchFilter !== 'All') {
+    filteredStudents = students.filter(s => s.batch === batchFilter);
+  }
+  
+  const attendance = getAttendanceByDate(attendanceDate);
+  
+  const presentCount = filteredStudents.filter(s => attendance[s.id] === 'Present').length;
+  const absentCount = filteredStudents.filter(s => attendance[s.id] === 'Absent').length;
+  const leaveCount = filteredStudents.filter(s => attendance[s.id] === 'Leave').length;
+  
+  document.getElementById('totalStudents').textContent = students.length;
+  document.getElementById('presentToday').textContent = presentCount;
+  document.getElementById('absentToday').textContent = absentCount;
+  document.getElementById('leaveToday').textContent = leaveCount;
+}
+
+function getAttendanceByDate(date) {
+  const all = JSON.parse(localStorage.getItem('attendance')) || {};
+  return all[date] || {};
+}
+
+function renderStudentTable() {
+  const students = getStudents();
+  const attendanceDate = document.getElementById('attendanceDate').value;
+  const batchFilter = document.getElementById('batchFilter').value;
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  
+  let filteredStudents = students;
+  if (batchFilter !== 'All') {
+    filteredStudents = students.filter(s => s.batch === batchFilter);
+  }
+  if (searchTerm) {
+    filteredStudents = filteredStudents.filter(s => 
+      s.name.toLowerCase().includes(searchTerm) || 
+      s.course.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  const attendance = getAttendanceByDate(attendanceDate);
+  const tbody = document.getElementById('studentTable');
+  tbody.innerHTML = '';
+  
+  if (filteredStudents.length === 0) {
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  
+  document.getElementById('emptyState').style.display = 'none';
+  
+  const presentCount = filteredStudents.filter(s => attendance[s.id] === 'Present').length;
+  const absentCount = filteredStudents.filter(s => attendance[s.id] === 'Absent').length;
+  const leaveCount = filteredStudents.filter(s => attendance[s.id] === 'Leave').length;
+  
+  document.getElementById('presentTotal').textContent = presentCount;
+  document.getElementById('absentTotal').textContent = absentCount;
+  document.getElementById('leaveTotal').textContent = leaveCount;
+  
+  filteredStudents.forEach(student => {
+    const status = attendance[student.id] || 'Not Marked';
+    const monthPercentage = calculateMonthPercentage(student.id);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${student.name}</td>
+      <td>${student.course}</td>
+      <td>${student.batch}</td>
+      <td>
+        <select class="status-select" data-student-id="${student.id}" data-date="${attendanceDate}">
+          <option value="">Not Marked</option>
+          <option value="Present" ${status === 'Present' ? 'selected' : ''}>Present</option>
+          <option value="Absent" ${status === 'Absent' ? 'selected' : ''}>Absent</option>
+          <option value="Leave" ${status === 'Leave' ? 'selected' : ''}>Leave</option>
+        </select>
+      </td>
+      <td>₹${student.monthlyFine || 0}</td>
+      <td>${monthPercentage.toFixed(1)}%</td>
+      <td>
+        <button class="view-profile-btn" data-student-id="${student.id}" type="button">View</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+  
+  attachStatusSelectListeners();
+  attachViewProfileListeners();
+}
+
+function attachStatusSelectListeners() {
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const studentId = e.target.dataset.studentId;
+      const date = e.target.dataset.date;
+      const status = e.target.value;
+      
+      let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+      if (!attendance[date]) {
+        attendance[date] = {};
+      }
+      
+      if (status) {
+        attendance[date][studentId] = status;
+        
+        if (status === 'Absent') {
+          const students = getStudents();
+          const student = students.find(s => s.id === studentId);
+          if (student) {
+            student.monthlyFine = (student.monthlyFine || 0) + 50;
+            saveStudents(students);
+          }
+        }
+      } else {
+        delete attendance[date][studentId];
+      }
+      
+      localStorage.setItem('attendance', JSON.stringify(attendance));
+      renderDashboard();
+      renderStudentTable();
+    });
+  });
+}
+
+function attachViewProfileListeners() {
+  document.querySelectorAll('.view-profile-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const studentId = e.target.dataset.studentId;
+      const students = getStudents();
+      const student = students.find(s => s.id === studentId);
+      
+      if (student) {
+        document.getElementById('profileTitle').textContent = student.name;
+        document.getElementById('profileBody').innerHTML = updateProfileBodyWithHistory(student);
+        document.getElementById('profileModal').classList.remove('hidden');
+      }
+    });
+  });
+}
+
+function renderDirectoryTable() {
+  const students = getStudents();
+  const tbody = document.getElementById('directoryTable');
+  tbody.innerHTML = '';
+  
+  students.forEach(student => {
+    const monthPercentage = calculateMonthPercentage(student.id);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${student.name}</td>
+      <td>${student.photo ? `<img src="${student.photo}" alt="${student.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : 'N/A'}</td>
+      <td>${student.course}</td>
+      <td>${student.batch}</td>
+      <td>${student.phone || 'N/A'}</td>
+      <td>₹${student.monthlyFine || 0}</td>
+      <td>${monthPercentage.toFixed(1)}%</td>
+      <td>
+        <button class="edit-btn" data-student-id="${student.id}" type="button">Edit</button>
+        <button class="delete-btn" data-student-id="${student.id}" type="button">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+  
+  attachEditDeleteListeners();
+}
+
+function calculateMonthPercentage(studentId) {
+  const currentMonth = getCurrentMonthKey();
+  const attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+  let present = 0;
+  let total = 0;
+  
+  for (const [date, statuses] of Object.entries(attendance)) {
+    if (date.startsWith(currentMonth)) {
+      const status = statuses[studentId];
+      if (status === 'Present') {
+        present++;
+        total++;
+      } else if (status === 'Absent') {
+        total++;
+      }
+    }
+  }
+  
+  return total === 0 ? 0 : (present / total) * 100;
+}
+
+function handleStudentSubmit(e) {
+  e.preventDefault();
+  
+  const studentId = document.getElementById('studentId').value;
+  const name = document.getElementById('studentName').value;
+  const course = document.getElementById('courseName').value;
+  const batch = document.getElementById('batchName').value;
+  const phone = document.getElementById('phoneNumber').value;
+  const photoInput = document.getElementById('studentPhoto');
+  
+  let students = getStudents();
+  
+  if (!photoInput.files.length && !studentId) {
+    const newStudent = {
+      id: Date.now().toString(),
+      name,
+      course,
+      batch,
+      phone,
+      photo: null,
+      monthlyFine: 0,
+      fineHistory: {}
+    };
+    students.push(newStudent);
+    saveStudents(students);
+    document.getElementById('studentForm').reset();
+    document.getElementById('studentId').value = '';
+    document.getElementById('photoPreview').textContent = 'No photo';
+    renderDirectoryTable();
+    renderStudentTable();
+    alert('Student added successfully!');
+    return;
+  }
+  
+  const fileReader = new FileReader();
+  
+  fileReader.onload = (event) => {
+    const photo = event.target.result;
+    
+    if (studentId) {
+      const student = students.find(s => s.id === studentId);
+      if (student) {
+        student.name = name;
+        student.course = course;
+        student.batch = batch;
+        student.phone = phone;
+        if (photoInput.files.length > 0) {
+          student.photo = photo;
+        }
+      }
+    } else {
+      const newStudent = {
+        id: Date.now().toString(),
+        name,
+        course,
+        batch,
+        phone,
+        photo: photo,
+        monthlyFine: 0,
+        fineHistory: {}
+      };
+      students.push(newStudent);
+    }
+    
+    saveStudents(students);
+    document.getElementById('studentForm').reset();
+    document.getElementById('studentId').value = '';
+    document.getElementById('photoPreview').textContent = 'No photo';
+    document.getElementById('studentSubmitBtn').textContent = 'Add Student';
+    renderDirectoryTable();
+    renderStudentTable();
+    alert('Student saved successfully!');
+  };
+  
+  if (photoInput.files.length > 0) {
+    fileReader.readAsDataURL(photoInput.files[0]);
+  } else {
+    fileReader.onload({ target: { result: null } });
+  }
+}
+
+function attachEditDeleteListeners() {
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const studentId = e.target.dataset.studentId;
+      const students = getStudents();
+      const student = students.find(s => s.id === studentId);
+      
+      if (student) {
+        document.getElementById('studentId').value = student.id;
+        document.getElementById('studentName').value = student.name;
+        document.getElementById('courseName').value = student.course;
+        document.getElementById('batchName').value = student.batch;
+        document.getElementById('phoneNumber').value = student.phone || '';
+        document.getElementById('photoPreview').textContent = student.photo ? 'Photo loaded' : 'No photo';
+        document.getElementById('studentSubmitBtn').textContent = 'Update Student';
+        document.querySelector('body').scrollTop = 0;
+      }
+    });
+  });
+  
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const studentId = e.target.dataset.studentId;
+      if (confirm('Are you sure you want to delete this student?')) {
+        let students = getStudents();
+        students = students.filter(s => s.id !== studentId);
+        saveStudents(students);
+        renderDirectoryTable();
+        renderStudentTable();
+      }
+    });
+  });
+}
+
+function handleMarkAllPresent() {
+  const attendanceDate = document.getElementById('attendanceDate').value;
+  const batchFilter = document.getElementById('batchFilter').value;
+  let students = getStudents();
+  
+  if (batchFilter !== 'All') {
+    students = students.filter(s => s.batch === batchFilter);
+  }
+  
+  let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+  if (!attendance[attendanceDate]) {
+    attendance[attendanceDate] = {};
+  }
+  
+  students.forEach(student => {
+    attendance[attendanceDate][student.id] = 'Present';
+  });
+  
+  localStorage.setItem('attendance', JSON.stringify(attendance));
+  renderDashboard();
+  renderStudentTable();
+}
+
+function handleClearDay() {
+  const attendanceDate = document.getElementById('attendanceDate').value;
+  if (confirm('Are you sure you want to clear all attendance for this date?')) {
+    let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+    delete attendance[attendanceDate];
+    localStorage.setItem('attendance', JSON.stringify(attendance));
+    renderDashboard();
+    renderStudentTable();
+  }
+}
+
+function handleSettingsSave(e) {
+  e.preventDefault();
+  
+  const centerName = document.getElementById('settingCenterName').value;
+  const footerEmail = document.getElementById('settingFooterEmail').value;
+  const backupEmail = document.getElementById('settingBackupEmail').value;
+  const pin = document.getElementById('settingPin').value;
+  
+  localStorage.setItem('centerName', centerName);
+  localStorage.setItem('footerEmail', footerEmail);
+  localStorage.setItem('backupEmail', backupEmail);
+  localStorage.setItem('adminPin', pin);
+  
+  document.getElementById('centerTitle').textContent = centerName;
+  document.getElementById('footerCenterName').textContent = centerName;
+  document.getElementById('footerEmail').href = `mailto:${footerEmail}`;
+  
+  alert('Settings saved successfully!');
+}
+
+function handleExportStudents() {
+  const students = getStudents();
+  let csv = 'Name,Course,Batch,Phone,Month Fine,Month %\n';
+  
+  students.forEach(student => {
+    const monthPercentage = calculateMonthPercentage(student.id);
+    csv += `"${student.name}","${student.course}","${student.batch}","${student.phone || 'N/A'}","₹${student.monthlyFine || 0}","${monthPercentage.toFixed(1)}%"\n`;
+  });
+  
+  downloadCSV(csv, 'students.csv');
+}
+
+function handleGenerateReport() {
+  const reportMonth = document.getElementById('reportMonth').value;
+  const reportBatch = document.getElementById('reportBatch').value;
+  
+  if (!reportMonth) {
+    alert('Please select a month');
+    return;
+  }
+  
+  let students = getStudents();
+  if (reportBatch !== 'All') {
+    students = students.filter(s => s.batch === reportBatch);
+  }
+  
+  const attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+  let html = `<h3>Attendance Report - ${reportMonth}</h3><table border="1" cellpadding="5" style="width: 100%; border-collapse: collapse;"><thead><tr><th>Student</th><th>Present</th><th>Absent</th><th>Leave</th><th>%</th></tr></thead><tbody>`;
+  
+  students.forEach(student => {
+    let present = 0, absent = 0, leave = 0;
+    
+    for (const [date, statuses] of Object.entries(attendance)) {
+      if (date.startsWith(reportMonth)) {
+        const status = statuses[student.id];
+        if (status === 'Present') present++;
+        else if (status === 'Absent') absent++;
+        else if (status === 'Leave') leave++;
+      }
+    }
+    
+    const total = present + absent + leave;
+    const percentage = total === 0 ? 0 : (present / total) * 100;
+    
+    html += `<tr><td>${student.name}</td><td>${present}</td><td>${absent}</td><td>${leave}</td><td>${percentage.toFixed(1)}%</td></tr>`;
+  });
+  
+  html += '</tbody></table>';
+  document.getElementById('reportArea').innerHTML = html;
+}
+
+function handleExportReport() {
+  const reportMonth = document.getElementById('reportMonth').value;
+  if (!reportMonth) {
+    alert('Please select a month');
+    return;
+  }
+  
+  let students = getStudents();
+  const reportBatch = document.getElementById('reportBatch').value;
+  if (reportBatch !== 'All') {
+    students = students.filter(s => s.batch === reportBatch);
+  }
+  
+  const attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+  let csv = `Attendance Report - ${reportMonth}\n"Student","Present","Absent","Leave","%"\n`;
+  
+  students.forEach(student => {
+    let present = 0, absent = 0, leave = 0;
+    
+    for (const [date, statuses] of Object.entries(attendance)) {
+      if (date.startsWith(reportMonth)) {
+        const status = statuses[student.id];
+        if (status === 'Present') present++;
+        else if (status === 'Absent') absent++;
+        else if (status === 'Leave') leave++;
+      }
+    }
+    
+    const total = present + absent + leave;
+    const percentage = total === 0 ? 0 : (present / total) * 100;
+    
+    csv += `"${student.name}","${present}","${absent}","${leave}","${percentage.toFixed(1)}%"\n`;
+  });
+  
+  downloadCSV(csv, `attendance-report-${reportMonth}.csv`);
+}
+
+function handlePrintReport() {
+  const reportArea = document.getElementById('reportArea').innerHTML;
+  if (!reportArea) {
+    alert('Please generate a report first');
+    return;
+  }
+  const printWindow = window.open('', '', 'height=600,width=800');
+  printWindow.document.write('<html><head><title>Attendance Report</title><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }</style></head><body>');
+  printWindow.document.write(reportArea);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  printWindow.print();
+}
+
+function handleDownloadBackup() {
+  const backup = {
+    students: JSON.parse(localStorage.getItem('students')) || [],
+    attendance: JSON.parse(localStorage.getItem('attendance')) || {},
+    settings: {
+      centerName: localStorage.getItem('centerName'),
+      footerEmail: localStorage.getItem('footerEmail'),
+      backupEmail: localStorage.getItem('backupEmail'),
+      pin: localStorage.getItem('adminPin')
+    }
+  };
+  
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleSendBackup() {
+  const backupEmail = localStorage.getItem('backupEmail');
+  if (!backupEmail) {
+    alert('Please set backup email in Settings first');
+    return;
+  }
+  
+  const backup = {
+    students: JSON.parse(localStorage.getItem('students')) || [],
+    attendance: JSON.parse(localStorage.getItem('attendance')) || {},
+    settings: {
+      centerName: localStorage.getItem('centerName'),
+      footerEmail: localStorage.getItem('footerEmail'),
+      backupEmail: localStorage.getItem('backupEmail')
+    }
+  };
+  
+  const json = JSON.stringify(backup, null, 2);
+  const mailtoLink = `mailto:${backupEmail}?subject=Arshbal Attendance Backup ${new Date().toISOString().split('T')[0]}&body=Please find the backup file attached.`;
+  
+  alert('Backup prepared! Opening email...\n\nNote: You may need to manually attach the backup file. Use "Download JSON Backup" button to get the file.');
+  window.open(mailtoLink);
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  
+  const enteredPin = document.getElementById('adminPin').value;
+  const correctPin = localStorage.getItem('adminPin') || '003';
+  
+  if (enteredPin === correctPin) {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('appView').classList.remove('hidden');
+    initializeApp();
+  } else {
+    document.getElementById('loginError').textContent = 'Invalid PIN. Default: 003';
+    document.getElementById('adminPin').value = '';
+  }
+}
+
+function handleLock() {
+  if (confirm('Are you sure you want to lock the dashboard?')) {
+    document.getElementById('appView').classList.add('hidden');
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('adminPin').value = '';
+    document.getElementById('loginError').textContent = '';
+  }
+}
+
+function attachEventListeners() {
+  document.getElementById('loginForm').addEventListener('submit', handleLogin);
+  document.getElementById('lockBtn').addEventListener('click', handleLock);
+  document.getElementById('sendBackupBtn').addEventListener('click', handleSendBackup);
+  document.getElementById('studentForm').addEventListener('submit', handleStudentSubmit);
+  document.getElementById('markAllPresentBtn').addEventListener('click', handleMarkAllPresent);
+  document.getElementById('clearDayBtn').addEventListener('click', handleClearDay);
+  document.getElementById('settingsForm').addEventListener('submit', handleSettingsSave);
+  document.getElementById('exportStudentsBtn').addEventListener('click', handleExportStudents);
+  document.getElementById('printReportBtn').addEventListener('click', handlePrintReport);
+  document.getElementById('exportReportBtn').addEventListener('click', handleExportReport);
+  document.getElementById('downloadBackupBtn').addEventListener('click', handleDownloadBackup);
+  document.getElementById('closeProfileBtn').addEventListener('click', () => {
+    document.getElementById('profileModal').classList.add('hidden');
+  });
+  document.getElementById('resetStudentFormBtn').addEventListener('click', () => {
+    document.getElementById('studentForm').reset();
+    document.getElementById('studentId').value = '';
+    document.getElementById('photoPreview').textContent = 'No photo';
+    document.getElementById('studentSubmitBtn').textContent = 'Add Student';
+  });
+  
+  document.getElementById('attendanceDate').addEventListener('change', renderStudentTable);
+  document.getElementById('batchFilter').addEventListener('change', () => {
+    renderDashboard();
+    renderStudentTable();
+  });
+  document.getElementById('searchInput').addEventListener('input', renderStudentTable);
+  document.getElementById('reportMonth').addEventListener('change', handleGenerateReport);
+  document.getElementById('reportBatch').addEventListener('change', handleGenerateReport);
+  document.getElementById('workingDaysOverride').addEventListener('change', handleGenerateReport);
+  
+  document.getElementById('studentPhoto').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      document.getElementById('photoPreview').textContent = e.target.files[0].name;
+    }
+  });
+  
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const viewId = e.target.dataset.view;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById(viewId).classList.add('active');
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeApp();
+});
