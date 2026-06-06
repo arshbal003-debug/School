@@ -22,7 +22,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1e3a8a 0%, #dc2626 100%);
     }
 
     .login-card {
@@ -36,21 +36,21 @@
     }
 
     .login-logo {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 20px;
-      background: #667eea;
+      background: linear-gradient(135deg, #1e3a8a 0%, #dc2626 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 40px;
+      font-size: 50px;
       font-weight: bold;
     }
 
     .eyebrow {
-      color: #667eea;
+      color: #1e3a8a;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -88,7 +88,7 @@
     .primary-btn {
       width: 100%;
       padding: 12px;
-      background: #667eea;
+      background: #1e3a8a;
       color: white;
       border: none;
       border-radius: 6px;
@@ -99,11 +99,11 @@
     }
 
     .primary-btn:hover {
-      background: #5568d3;
+      background: #163168;
     }
 
     .form-error {
-      color: #e74c3c;
+      color: #dc2626;
       margin-top: 15px;
       font-size: 14px;
     }
@@ -124,7 +124,7 @@
 
     .topbar {
       background: white;
-      padding: 20px;
+      padding: 15px 20px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       display: flex;
       justify-content: space-between;
@@ -138,21 +138,26 @@
     }
 
     .brand-mark {
-      width: 50px;
-      height: 50px;
-      background: #667eea;
+      width: 60px;
+      height: 60px;
+      background: white;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 24px;
+      overflow: hidden;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .brand h1 {
       font-size: 18px;
-      color: #333;
+      color: #1e3a8a;
+      font-weight: 600;
     }
 
     .top-actions {
@@ -213,8 +218,8 @@
     }
 
     .tab-btn.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
+      color: #1e3a8a;
+      border-bottom-color: #1e3a8a;
     }
 
     main {
@@ -266,7 +271,7 @@
     }
 
     .stat-card.absent {
-      border-left: 4px solid #e74c3c;
+      border-left: 4px solid #dc2626;
     }
 
     .stat-card.leave {
@@ -330,7 +335,7 @@
 
     .danger-soft {
       background: #fdeaea;
-      color: #e74c3c;
+      color: #dc2626;
     }
 
     .table-wrap {
@@ -373,7 +378,7 @@
     .delete-btn,
     .reset-fine-btn {
       padding: 6px 12px;
-      background: #667eea;
+      background: #1e3a8a;
       color: white;
       border: none;
       border-radius: 4px;
@@ -383,7 +388,7 @@
     }
 
     .delete-btn {
-      background: #e74c3c;
+      background: #dc2626;
     }
 
     .edit-btn {
@@ -435,7 +440,7 @@
     }
 
     .summary-strip b {
-      color: #667eea;
+      color: #1e3a8a;
       font-size: 16px;
     }
 
@@ -482,7 +487,7 @@
     }
 
     .profile-details strong {
-      color: #667eea;
+      color: #1e3a8a;
     }
 
     .fine-section {
@@ -490,11 +495,11 @@
       padding: 15px;
       border-radius: 6px;
       margin-top: 15px;
-      border-left: 4px solid #e74c3c;
+      border-left: 4px solid #dc2626;
     }
 
     .fine-section h3 {
-      color: #e74c3c;
+      color: #dc2626;
       margin-bottom: 10px;
     }
 
@@ -550,7 +555,7 @@
     }
 
     footer {
-      background: #333;
+      background: #1e3a8a;
       color: white;
       padding: 20px;
       text-align: center;
@@ -559,10 +564,19 @@
 
     .footer-brand {
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .footer-logo {
+      width: 30px;
+      height: 30px;
     }
 
     footer a {
-      color: #667eea;
+      color: #fbbf24;
       text-decoration: none;
     }
 
@@ -586,13 +600,37 @@
       th, td {
         padding: 8px;
       }
+
+      .topbar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .brand h1 {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="loginView" class="login-view">
     <section class="login-card">
-      <div class="login-logo">📚</div>
+      <svg class="login-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" rx="25" ry="25" fill="url(#grad1)"/>
+        <circle cx="50" cy="35" r="12" fill="white"/>
+        <path d="M 30 55 Q 30 45 50 45 Q 70 45 70 55" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M 35 60 Q 35 55 50 55 Q 65 55 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="35" cy="70" r="4" fill="white"/>
+        <circle cx="50" cy="75" r="4" fill="white"/>
+        <circle cx="65" cy="70" r="4" fill="white"/>
+        <path d="M 35 70 L 45 80 M 50 75 L 50 85 M 65 70 L 55 80" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
       <p class="eyebrow">Attendance Pro</p>
       <h1>Arshbal Attendance</h1>
       <p class="muted">Admin dashboard for students, attendance & reports</p>
@@ -610,8 +648,26 @@
   <div id="appView" class="app-shell hidden">
     <header class="topbar">
       <section class="brand">
-        <div class="brand-mark">📚</div>
+        <div class="brand-mark">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="25" ry="25" fill="url(#grad2)"/>
+            <circle cx="50" cy="35" r="12" fill="white"/>
+            <path d="M 30 55 Q 30 45 50 45 Q 70 45 70 55" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M 35 60 Q 35 55 50 55 Q 65 55 65 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <circle cx="35" cy="70" r="4" fill="white"/>
+            <circle cx="50" cy="75" r="4" fill="white"/>
+            <circle cx="65" cy="70" r="4" fill="white"/>
+            <path d="M 35 70 L 45 80 M 50 75 L 50 85 M 65 70 L 55 80" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div>
+          <p class="eyebrow">Attendance Pro</p>
           <h1 id="centerTitle">Arshbal Attendance</h1>
         </div>
       </section>
@@ -814,7 +870,25 @@
     </main>
 
     <footer>
-      <div class="footer-brand" id="footerCenterName">Arshbal Attendance</div>
+      <div class="footer-brand">
+        <svg class="footer-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="25" ry="25" fill="url(#grad3)"/>
+          <circle cx="50" cy="35" r="10" fill="white"/>
+          <path d="M 30 55 Q 30 45 50 45 Q 70 45 70 55" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M 35 60 Q 35 55 50 55 Q 65 55 65 60" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <circle cx="35" cy="70" r="3" fill="white"/>
+          <circle cx="50" cy="75" r="3" fill="white"/>
+          <circle cx="65" cy="70" r="3" fill="white"/>
+          <path d="M 35 70 L 45 80 M 50 75 L 50 85 M 65 70 L 55 80" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span id="footerCenterName">Arshbal Attendance</span>
+      </div>
       <a id="footerEmail" href="mailto:info@example.com">info@example.com</a>
     </footer>
   </div>
