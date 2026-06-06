@@ -184,6 +184,16 @@
       font-weight: 500;
     }
 
+    .reset-btn {
+      padding: 10px 20px;
+      background: #e67e22;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
     .tabs {
       display: flex;
       background: white;
@@ -360,7 +370,8 @@
 
     .view-profile-btn,
     .edit-btn,
-    .delete-btn {
+    .delete-btn,
+    .reset-fine-btn {
       padding: 6px 12px;
       background: #667eea;
       color: white;
@@ -377,6 +388,10 @@
 
     .edit-btn {
       background: #f39c12;
+    }
+
+    .reset-fine-btn {
+      background: #e67e22;
     }
 
     .pro-form {
@@ -489,6 +504,26 @@
       font-size: 14px;
     }
 
+    .reset-section {
+      background: #fff3e0;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+      border-left: 4px solid #e67e22;
+      text-align: center;
+    }
+
+    .reset-section button {
+      padding: 10px 20px;
+      background: #e67e22;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
     .report-area {
       margin-top: 20px;
     }
@@ -582,6 +617,7 @@
       </section>
       <section class="top-actions">
         <button id="downloadBackupBtn" class="backup-btn">Download Backup</button>
+        <button id="resetAllFinesBtn" class="reset-btn">Reset All Fines</button>
         <button id="lockBtn" class="secondary-btn">Lock</button>
       </section>
     </header>
@@ -771,7 +807,7 @@
             <button class="primary-btn">Save Settings</button>
           </form>
           <div class="note-box">
-            <strong>Note:</strong> Data is stored locally on this device.
+            <strong>Note:</strong> Fine per absence = ₹10 | Data stored locally on device
           </div>
         </section>
       </section>
@@ -794,6 +830,9 @@
   </div>
 
   <script>
+    // Fine per absence = 10 rupees
+    const FINE_PER_ABSENCE = 10;
+
     function getCurrentMonthKey() {
       const now = new Date();
       const year = now.getFullYear();
@@ -846,6 +885,10 @@
             <h3>Current Month Fine: ₹${student.monthlyFine}</h3>
             <h4>Previous Months Fines:</h4>
             ${fineHistoryHTML || '<p>No previous fines</p>'}
+          </div>
+          <div class="reset-section">
+            <p><strong>By Mistake Marked Absent?</strong></p>
+            <button type="button" class="reset-student-fine-btn" data-student-id="${student.id}">Reset Fine (₹10)</button>
           </div>
         </div>
       `;
@@ -1013,7 +1056,7 @@
               const students = getStudents();
               const student = students.find(s => s.id === studentId);
               if (student) {
-                student.monthlyFine = (student.monthlyFine || 0) + 50;
+                student.monthlyFine = (student.monthlyFine || 0) + FINE_PER_ABSENCE;
                 saveStudents(students);
               }
             }
@@ -1040,6 +1083,34 @@
             document.getElementById('profileTitle').textContent = student.name;
             document.getElementById('profileBody').innerHTML = updateProfileBodyWithHistory(student);
             document.getElementById('profileModal').classList.remove('hidden');
+            
+            // Attach reset fine button
+            document.querySelectorAll('.reset-student-fine-btn').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                const sid = e.target.dataset.studentId;
+                let students = getStudents();
+                const student = students.find(s => s.id === sid);
+                
+                if (student && student.monthlyFine >= FINE_PER_ABSENCE) {
+                  student.monthlyFine -= FINE_PER_ABSENCE;
+                  saveStudents(students);
+                  
+                  // Update profile
+                  document.getElementById('profileBody').innerHTML = updateProfileBodyWithHistory(student);
+                  
+                  // Re-attach button listener
+                  document.querySelectorAll('.reset-student-fine-btn').forEach(btn => {
+                    btn.addEventListener('click', arguments.callee);
+                  });
+                  
+                  renderStudentTable();
+                  renderDirectoryTable();
+                  alert(`Fine reduced by ₹${FINE_PER_ABSENCE}`);
+                } else if (student && student.monthlyFine < FINE_PER_ABSENCE) {
+                  alert('No fine to reset');
+                }
+              });
+            });
           }
         });
       });
@@ -1172,6 +1243,29 @@
       }
     }
 
+    function handleResetAllFines() {
+      if (confirm('Reset all students fines for current month?')) {
+        let students = getStudents();
+        
+        students.forEach(student => {
+          if (!student.fineHistory) student.fineHistory = {};
+          const currentMonth = getCurrentMonthKey();
+          
+          if (student.monthlyFine > 0) {
+            const prevMonth = getPreviousMonth();
+            student.fineHistory[prevMonth] = student.monthlyFine;
+          }
+          
+          student.monthlyFine = 0;
+        });
+        
+        saveStudents(students);
+        renderStudentTable();
+        renderDirectoryTable();
+        alert('All fines reset!');
+      }
+    }
+
     function handleSettingsSave(e) {
       e.preventDefault();
       
@@ -1217,7 +1311,7 @@
       }
       
       const attendance = JSON.parse(localStorage.getItem('attendance')) || {};
-      let html = `<h3>Report: ${reportMonth}</h3><table border="1" cellpadding="5" style="width:100%"><thead><tr><th>Student</th><th>Present</th><th>Absent</th><th>Leave</th><th>%</th></tr></thead><tbody>`;
+      let html = `<h3>Report: ${reportMonth}</h3><table border="1" cellpadding="5" style="width:100%"><thead><tr><th>Student</th><th>Present</th><th>Absent</th><th>Leave</th><th>Fine (₹)</th><th>%</th></tr></thead><tbody>`;
       
       students.forEach(student => {
         let present = 0, absent = 0, leave = 0;
@@ -1233,8 +1327,9 @@
         
         const total = present + absent + leave;
         const percentage = total === 0 ? 0 : (present / total) * 100;
+        const monthFine = (student.fineHistory && student.fineHistory[reportMonth]) || 0;
         
-        html += `<tr><td>${student.name}</td><td>${present}</td><td>${absent}</td><td>${leave}</td><td>${percentage.toFixed(1)}%</td></tr>`;
+        html += `<tr><td>${student.name}</td><td>${present}</td><td>${absent}</td><td>${leave}</td><td>₹${monthFine}</td><td>${percentage.toFixed(1)}%</td></tr>`;
       });
       
       html += '</tbody></table>';
@@ -1255,7 +1350,7 @@
       }
       
       const attendance = JSON.parse(localStorage.getItem('attendance')) || {};
-      let csv = `Report ${reportMonth}\n"Student","Present","Absent","Leave","%"\n`;
+      let csv = `Report ${reportMonth}\n"Student","Present","Absent","Leave","Fine (₹)","%"\n`;
       
       students.forEach(student => {
         let present = 0, absent = 0, leave = 0;
@@ -1271,8 +1366,9 @@
         
         const total = present + absent + leave;
         const percentage = total === 0 ? 0 : (present / total) * 100;
+        const monthFine = (student.fineHistory && student.fineHistory[reportMonth]) || 0;
         
-        csv += `"${student.name}","${present}","${absent}","${leave}","${percentage.toFixed(1)}%"\n`;
+        csv += `"${student.name}","${present}","${absent}","${leave}","₹${monthFine}","${percentage.toFixed(1)}%"\n`;
       });
       
       downloadCSV(csv, `report-${reportMonth}.csv`);
@@ -1352,6 +1448,7 @@
       document.getElementById('studentForm').addEventListener('submit', handleStudentSubmit);
       document.getElementById('markAllPresentBtn').addEventListener('click', handleMarkAllPresent);
       document.getElementById('clearDayBtn').addEventListener('click', handleClearDay);
+      document.getElementById('resetAllFinesBtn').addEventListener('click', handleResetAllFines);
       document.getElementById('settingsForm').addEventListener('submit', handleSettingsSave);
       document.getElementById('exportStudentsBtn').addEventListener('click', handleExportStudents);
       document.getElementById('printReportBtn').addEventListener('click', handlePrintReport);
